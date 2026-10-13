@@ -3,55 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Khmer AI Image & Product Studio</title>
+    <title>KhmerPix AI Studio</title>
     <!-- Telegram Web App Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- Google Fonts for Danh Hong Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Angkor&family=Bayon&family=Bokor&family=Chenla&family=Dangrek&family=Koulen&family=Moul&family=Moulpali&family=Preahvihear&family=Siemreap&family=Suwannaphum&display=swap" rel="stylesheet">
     <style>
         :root {
-            --tg-theme-bg-color: #ffffff;
-            --tg-theme-text-color: #222222;
-            --tg-theme-hint-color: #999999;
-            --tg-theme-button-color: #2481cc;
-            --tg-theme-button-text-color: #ffffff;
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --hint-color: #888888;
+            --accent-color: #6366f1;
+            --accent-hover: #4f46e5;
+            --border-color: #2d2d2d;
         }
         body {
             font-family: 'Siemreap', sans-serif;
-            background-color: var(--tg-theme-bg-color);
-            color: var(--tg-theme-text-color);
+            background-color: var(--bg-color);
+            color: var(--text-color);
             margin: 0;
             padding: 15px;
         }
-        h2 { text-align: center; color: var(--tg-theme-button-color); }
+        h2 { text-align: center; color: #818cf8; margin-bottom: 20px; }
         .section {
-            background: #f5f5f5;
-            padding: 12px;
-            border-radius: 10px;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 12px;
             margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
-        label { font-weight: bold; display: block; margin-top: 8px; font-size: 14px; }
+        label { font-weight: bold; display: block; margin-bottom: 6px; font-size: 14px; color: #a5b4fc; }
         input, select, textarea {
             width: 100%;
-            padding: 10px;
-            margin-top: 5px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            padding: 12px;
+            background-color: #2a2a2a;
+            color: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
             box-sizing: border-box;
             font-family: inherit;
+            font-size: 14px;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
         }
         button {
-            background-color: var(--tg-theme-button-color);
-            color: var(--tg-theme-button-text-color);
+            background-color: var(--accent-color);
+            color: #ffffff;
             border: none;
             padding: 12px;
             width: 100%;
             border-radius: 8px;
             font-size: 16px;
+            font-weight: bold;
             cursor: pointer;
             margin-top: 10px;
             font-family: inherit;
+            transition: background 0.2s;
         }
+        button:hover { background-color: var(--accent-hover); }
+        
+        /* Fonts Class */
         .font-moul { font-family: 'Moul', cursive; }
         .font-koulen { font-family: 'Koulen', cursive; }
         .font-bayon { font-family: 'Bayon', cursive; }
@@ -63,27 +78,51 @@
         .font-bokor { font-family: 'Bokor', cursive; }
         .font-suwannaphum { font-family: 'Suwannaphum', serif; }
         .font-chenla { font-family: 'Chenla', cursive; }
-        
+
+        /* Loading & Preview Modal */
         .modal {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.8);
             justify-content: center;
             align-items: center;
+            z-index: 1000;
         }
         .modal-content {
-            background: white;
+            background: var(--card-bg);
             padding: 20px;
-            border-radius: 10px;
+            border-radius: 12px;
             width: 90%;
             max-width: 400px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+        .spinner {
+            border: 4px solid #2a2a2a;
+            border-top: 4px solid var(--accent-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .preview-img {
+            width: 100%;
+            max-height: 250px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
 
-    <h2>🎨 Khmer AI Product Studio</h2>
+    <h2>✨ KhmerPix AI Studio</h2>
 
     <!-- Type 1: ដាក់រូបភាពផលិតផល -->
     <div class="section">
@@ -95,15 +134,15 @@
     <div class="section">
         <label>2. ស្វែងរក Background ពី Internet:</label>
         <input type="text" id="bgSearchQuery" placeholder="ឧទាហរណ៍៖ ទេសភាពព្រៃភ្នំ, ស្ទូឌីយោទំនើប...">
-        <button onclick="searchBackground()">ស្វែងរក Background</button>
+        <button onclick="startGenerating('bg')">ស្វែងរក & បង្កើត Background</button>
     </div>
 
     <!-- Type 3: ឈ្មោះផលិតផល និង Edit ហ្វុន -->
     <div class="section">
         <label>3. ឈ្មោះផលិតផល ( Editable Text ):</label>
-        <input type="text" id="productTitle" value="ផលិតផលថ្មី គុណភាពខ្ពស់">
+        <input type="text" id="productTitle" value="ផលិតផលថ្មី គុណភាពខ្ពស់" class="font-moul">
         
-        <label>ជ្រើសរើសហ្វុន (Fonts):</label>
+        <label style="margin-top: 12px;">ជ្រើសរើសហ្វុន (Fonts):</label>
         <select id="fontSelector" onchange="changeFont()">
             <option value="font-moul">Moul (មូល)</option>
             <option value="font-koulen">Koulen (គូលែន)</option>
@@ -118,8 +157,8 @@
             <option value="font-chenla">Chenla (ចេនឡា)</option>
         </select>
 
-        <label>ពណ៌អក្សរ & 3D Effect:</label>
-        <input type="color" id="textColor" value="#ffffff" style="height:40px;">
+        <label style="margin-top: 12px;">ពណ៌អក្សរ & 3D Effect:</label>
+        <input type="color" id="textColor" value="#ffffff" style="height:45px; padding: 2px;">
     </div>
 
     <!-- Type 4: ការរៀបរាប់អំពីផលិតផល -->
@@ -130,18 +169,39 @@
     </div>
 
     <!-- Action Buttons -->
-    <button onclick="saveImage()" style="background-color: #28a745;">💾 រក្សាទុក & ចែករំលែក</button>
-    <button onclick="openModal('privacyModal')" style="background-color: #6c757d; margin-top: 5px;">🔒 ឯកជនភាព & គោលការណ៍ (See More)</button>
-    <button onclick="openModal('aboutModal')" style="background-color: #17a2b8; margin-top: 5px;">ℹ️ អំពីយើង</button>
-    <button id="adminBtn" onclick="checkAdmin()" style="background-color: #dc3545; margin-top: 5px; display:none;">⚙️ Admin Panel</button>
+    <button onclick="startGenerating('final')" style="background-color: #10b981;">🚀 Generate រូបភាពរួមបញ្ចូលគ្នា</button>
+    <button onclick="openModal('privacyModal')" style="background-color: #374151; margin-top: 5px;">🔒 ឯកជនភាព & គោលការណ៍ (See More)</button>
+    <button onclick="openModal('aboutModal')" style="background-color: #0284c7; margin-top: 5px;">ℹ️ អំពីយើង</button>
+    <button id="adminBtn" onclick="openModal('aboutModal')" style="background-color: #dc2626; margin-top: 5px; display:none;">⚙️ Admin Panel</button>
+
+    <!-- Loading Modal -->
+    <div id="loadingModal" class="modal">
+        <div class="modal-content">
+            <h3 style="color: #818cf8;">កំពុងបង្កើតរូបភាព...</h3>
+            <div class="spinner"></div>
+            <p id="loadingText" style="color: var(--hint-color); font-size: 13px;">សូមរង់ចាំបន្តិច ប្រព័ន្ធកំពុងដំណើរការ AI...</p>
+        </div>
+    </div>
+
+    <!-- Result / Preview & Edit Modal -->
+    <div id="previewModal" class="modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <h3 style="color: #10b981;">✨ រូបភាពរួចរាល់សម្រាប់ការកែសម្រួល!</h3>
+            <img id="resultImage" class="preview-img" src="https://via.placeholder.com/400x250/2a2a2a/ffffff?text=KhmerPix+AI+Preview" alt="Generated Image">
+            <label style="text-align: left;">កែសម្រួលអក្សរនៅលើរូបភាពភ្លាមៗ:</label>
+            <input type="text" id="editImageText" value="ផលិតផលថ្មី គុណភាពខ្ពស់" style="margin-bottom: 10px;">
+            <button onclick="saveImage()" style="background-color: #10b981;">💾 រក្សាទុក & ចែករំលែក</button>
+            <button onclick="closeModal('previewModal')" style="background-color: #4b5563;">បិទ</button>
+        </div>
+    </div>
 
     <!-- Modal ឯកជនភាព -->
     <div id="privacyModal" class="modal">
         <div class="modal-content">
             <h3>គោលការណ៍ឯកជនភាព</h3>
-            <p>កម្មវិធីនេះត្រូវបានការពារយ៉ាងតឹងរ៉ឹង... <span id="seeMoreText" style="display:none;">ទិន្នន័យរូបភាព និងព័ត៌មានរបស់អ្នកត្រូវបានរក្សាទុកដោយសុវត្ថិភាពខ្ពស់ មិនយកទៅប្រើប្រាស់ខុសច្បាប់ឡើយ។</span></p>
-            <button onclick="toggleSeeMore()" id="seeMoreBtn">See More</button>
-            <button onclick="closeModal('privacyModal')" style="background:#888;">បិទ</button>
+            <p style="font-size: 13px; color: var(--hint-color);">កម្មវិធីនេះត្រូវបានការពារយ៉ាងតឹងរ៉ឹង... <span id="seeMoreText" style="display:none;"><br>ទិន្នន័យរូបភាព និងព័ត៌មានរបស់អ្នកត្រូវបានរក្សាទុកដោយសុវត្ថិភាពខ្ពស់ មិនយកទៅប្រើប្រាស់ខុសច្បាប់ឡើយ។</span></p>
+            <button onclick="toggleSeeMore()" id="seeMoreBtn" style="background: #4b5563; padding: 8px;">See More</button>
+            <button onclick="closeModal('privacyModal')" style="background:#dc2626; padding: 8px;">បិទ</button>
         </div>
     </div>
 
@@ -149,13 +209,13 @@
     <div id="aboutModal" class="modal">
         <div class="modal-content">
             <h3>អំពីយើង</h3>
-            <p id="aboutText">កម្មវិធីនេះបង្កើតឡើងដើម្បីជួយដល់ម្ចាស់អាជីវកម្មអនឡាញក្នុងការបង្កើតរូបភាព និងអត្ថបទផ្សាយពាណិជ្ជកម្មយ៉ាងឆាប់រហ័ស។</p>
-            <div id="adminEditSection" style="display:none; margin-top:10px; border-top:1px solid #ddd; padding-top:10px;">
+            <p id="aboutText" style="font-size: 13px; color: var(--hint-color);">កម្មវិធីនេះបង្កើតឡើងដើម្បីជួយដល់ម្ចាស់អាជីវកម្មអនឡាញក្នុងការបង្កើតរូបភាព និងអត្ថបទផ្សាយពាណិជ្ជកម្មយ៉ាងឆាប់រហ័ស។</p>
+            <div id="adminEditSection" style="display:none; margin-top:15px; border-top:1px solid var(--border-color); padding-top:10px; text-align: left;">
                 <label>កែសម្រួល "អំពីយើង" (Admin Only):</label>
                 <textarea id="editAboutInput" rows="3"></textarea>
-                <button onclick="saveAboutText()">រក្សាទុកការកែប្រែ</button>
+                <button onclick="saveAboutText()" style="background-color: #dc2626;">រក្សាទុកការកែប្រែ</button>
             </div>
-            <button onclick="closeModal('aboutModal')" style="background:#888; margin-top:10px;">បិទ</button>
+            <button onclick="closeModal('aboutModal')" style="background:#4b5563; margin-top:10px; padding: 8px;">បិទ</button>
         </div>
     </div>
 
@@ -163,9 +223,8 @@
         let tg = window.Telegram.WebApp;
         tg.expand();
 
-        // ตรวจสอบ Admin (@SameanMom168)
         let user = tg.initDataUnsafe?.user;
-        let username = user?.username || "SameanMom168"; // សាកល្បងហ្គាត
+        let username = user?.username || "SameanMom168"; 
         
         if (username === "SameanMom168") {
             document.getElementById('adminBtn').style.display = "block";
@@ -176,11 +235,19 @@
             let selectedFont = document.getElementById('fontSelector').value;
             let titleInput = document.getElementById('productTitle');
             titleInput.className = selectedFont;
+            document.getElementById('editImageText').className = selectedFont;
         }
 
-        function searchBackground() {
-            let query = document.getElementById('bgSearchQuery').value;
-            alert("กำลังค้นหา Background: " + query + " จาก Internet...");
+        function startGenerating(type) {
+            document.getElementById('loadingModal').style.display = 'flex';
+            
+            // จำลองเวลา রង់ចាំ (Loading Time 2 វិនាទី)
+            setTimeout(() => {
+                document.getElementById('loadingModal').style.display = 'none';
+                // បង្ហាញ Result Preview Modal សម្រាប់ Edit
+                document.getElementById('editImageText').value = document.getElementById('productTitle').value;
+                document.getElementById('previewModal').style.display = 'flex';
+            }, 2000);
         }
 
         function generateDescription() {
@@ -189,6 +256,7 @@
 
         function saveImage() {
             alert("រូបភាពត្រូវបានរក្សាទុក និងរួចរាល់សម្រាប់ Share ទៅកាន់ Telegram ឬបណ្តាញសង្គមផ្សេងៗ!");
+            closeModal('previewModal');
         }
 
         function openModal(modalId) {
@@ -211,15 +279,12 @@
             }
         }
 
-        function checkAdmin() {
-            openModal('aboutModal');
-        }
-
         function saveAboutText() {
             let newText = document.getElementById('editAboutInput').value;
             if(newText) {
                 document.getElementById('aboutText').innerText = newText;
                 alert("បានកែសម្រួលព័ត៌មានអំពីយើងដោយជោគជ័យ!");
+                closeModal('aboutModal');
             }
         }
     </script>
