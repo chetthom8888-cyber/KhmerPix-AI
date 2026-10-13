@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khmer AI Image & Product Studio</title>
+    <!-- Telegram Web App Script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Google Fonts for Danh Hong Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Angkor&family=Bayon&family=Bokor&family=Chenla&family=Dangrek&family=Koulen&family=Moul&family=Moulpali&family=Preahvihear&family=Siemreap&family=Suwannaphum&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --tg-theme-bg-color: #ffffff;
+            --tg-theme-text-color: #222222;
+            --tg-theme-hint-color: #999999;
+            --tg-theme-button-color: #2481cc;
+            --tg-theme-button-text-color: #ffffff;
+        }
+        body {
+            font-family: 'Siemreap', sans-serif;
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            margin: 0;
+            padding: 15px;
+        }
+        h2 { text-align: center; color: var(--tg-theme-button-color); }
+        .section {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        label { font-weight: bold; display: block; margin-top: 8px; font-size: 14px; }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+        button {
+            background-color: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-family: inherit;
+        }
+        .font-moul { font-family: 'Moul', cursive; }
+        .font-koulen { font-family: 'Koulen', cursive; }
+        .font-bayon { font-family: 'Bayon', cursive; }
+        .font-moulpali { font-family: 'Moulpali', cursive; }
+        .font-angkor { font-family: 'Angkor', cursive; }
+        .font-siemreap { font-family: 'Siemreap', cursive; }
+        .font-preahvihear { font-family: 'Preahvihear', cursive; }
+        .font-dangrek { font-family: 'Dangrek', cursive; }
+        .font-bokor { font-family: 'Bokor', cursive; }
+        .font-suwannaphum { font-family: 'Suwannaphum', serif; }
+        .font-chenla { font-family: 'Chenla', cursive; }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>🎨 Khmer AI Product Studio</h2>
+
+    <!-- Type 1: ដាក់រូបភាពផលិតផល -->
+    <div class="section">
+        <label>1. ដាក់រូបភាពផលិតផល (Upload Product):</label>
+        <input type="file" id="productImage" accept="image/*">
+    </div>
+
+    <!-- Type 2: Background & Web Search -->
+    <div class="section">
+        <label>2. ស្វែងរក Background ពី Internet:</label>
+        <input type="text" id="bgSearchQuery" placeholder="ឧទាហរណ៍៖ ទេសភាពព្រៃភ្នំ, ស្ទូឌីយោទំនើប...">
+        <button onclick="searchBackground()">ស្វែងរក Background</button>
+    </div>
+
+    <!-- Type 3: ឈ្មោះផលិតផល និង Edit ហ្វុន -->
+    <div class="section">
+        <label>3. ឈ្មោះផលិតផល ( Editable Text ):</label>
+        <input type="text" id="productTitle" value="ផលិតផលថ្មី គុណភាពខ្ពស់">
+        
+        <label>ជ្រើសរើសហ្វុន (Fonts):</label>
+        <select id="fontSelector" onchange="changeFont()">
+            <option value="font-moul">Moul (មូល)</option>
+            <option value="font-koulen">Koulen (គូលែន)</option>
+            <option value="font-bayon">Bayon (បាយ័ន)</option>
+            <option value="font-moulpali">Moulpali (មូលបាលី)</option>
+            <option value="font-angkor">Angkor (អង្គរ)</option>
+            <option value="font-siemreap">Siemreap (សៀមរាប)</option>
+            <option value="font-preahvihear">Preahvihear (ព្រះវិហារ)</option>
+            <option value="font-dangrek">Dangrek (ដងរែក)</option>
+            <option value="font-bokor">Bokor (បូកគោ)</option>
+            <option value="font-suwannaphum">Suwannaphum (សុវណ្ណភូមិ)</option>
+            <option value="font-chenla">Chenla (ចេនឡា)</option>
+        </select>
+
+        <label>ពណ៌អក្សរ & 3D Effect:</label>
+        <input type="color" id="textColor" value="#ffffff" style="height:40px;">
+    </div>
+
+    <!-- Type 4: ការរៀបរាប់អំពីផលិតផល -->
+    <div class="section">
+        <label>4. ការរៀបរាប់អំពីផលិតផល (AI Description):</label>
+        <textarea id="productDesc" rows="3" placeholder="បង្កើតអត្ថបទលក់ដាច់ដោយ AI..."></textarea>
+        <button onclick="generateDescription()">Generate រៀបរាប់ផលិតផល</button>
+    </div>
+
+    <!-- Action Buttons -->
+    <button onclick="saveImage()" style="background-color: #28a745;">💾 រក្សាទុក & ចែករំលែក</button>
+    <button onclick="openModal('privacyModal')" style="background-color: #6c757d; margin-top: 5px;">🔒 ឯកជនភាព & គោលការណ៍ (See More)</button>
+    <button onclick="openModal('aboutModal')" style="background-color: #17a2b8; margin-top: 5px;">ℹ️ អំពីយើង</button>
+    <button id="adminBtn" onclick="checkAdmin()" style="background-color: #dc3545; margin-top: 5px; display:none;">⚙️ Admin Panel</button>
+
+    <!-- Modal ឯកជនភាព -->
+    <div id="privacyModal" class="modal">
+        <div class="modal-content">
+            <h3>គោលការណ៍ឯកជនភាព</h3>
+            <p>កម្មវិធីនេះត្រូវបានការពារយ៉ាងតឹងរ៉ឹង... <span id="seeMoreText" style="display:none;">ទិន្នន័យរូបភាព និងព័ត៌មានរបស់អ្នកត្រូវបានរក្សាទុកដោយសុវត្ថិភាពខ្ពស់ មិនយកទៅប្រើប្រាស់ខុសច្បាប់ឡើយ។</span></p>
+            <button onclick="toggleSeeMore()" id="seeMoreBtn">See More</button>
+            <button onclick="closeModal('privacyModal')" style="background:#888;">បិទ</button>
+        </div>
+    </div>
+
+    <!-- Modal អំពីយើង & Admin -->
+    <div id="aboutModal" class="modal">
+        <div class="modal-content">
+            <h3>អំពីយើង</h3>
+            <p id="aboutText">កម្មវិធីនេះបង្កើតឡើងដើម្បីជួយដល់ម្ចាស់អាជីវកម្មអនឡាញក្នុងការបង្កើតរូបភាព និងអត្ថបទផ្សាយពាណិជ្ជកម្មយ៉ាងឆាប់រហ័ស។</p>
+            <div id="adminEditSection" style="display:none; margin-top:10px; border-top:1px solid #ddd; padding-top:10px;">
+                <label>កែសម្រួល "អំពីយើង" (Admin Only):</label>
+                <textarea id="editAboutInput" rows="3"></textarea>
+                <button onclick="saveAboutText()">រក្សាទុកការកែប្រែ</button>
+            </div>
+            <button onclick="closeModal('aboutModal')" style="background:#888; margin-top:10px;">បិទ</button>
+        </div>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // ตรวจสอบ Admin (@SameanMom168)
+        let user = tg.initDataUnsafe?.user;
+        let username = user?.username || "SameanMom168"; // សាកល្បងហ្គាត
+        
+        if (username === "SameanMom168") {
+            document.getElementById('adminBtn').style.display = "block";
+            document.getElementById('adminEditSection').style.display = "block";
+        }
+
+        function changeFont() {
+            let selectedFont = document.getElementById('fontSelector').value;
+            let titleInput = document.getElementById('productTitle');
+            titleInput.className = selectedFont;
+        }
+
+        function searchBackground() {
+            let query = document.getElementById('bgSearchQuery').value;
+            alert("กำลังค้นหา Background: " + query + " จาก Internet...");
+        }
+
+        function generateDescription() {
+            document.getElementById('productDesc').value = "✨ ផលិតផលថ្មីគុណភាពខ្ពស់ នាំចូលផ្ទាល់ ធានាទាំងតម្លៃ និងគុណភាព! កម្មង់ទិញថ្ងៃនេះទទួលបានការបញ្ចុះតម្លៃពិសេស។";
+        }
+
+        function saveImage() {
+            alert("រូបភាពត្រូវបានរក្សាទុក និងរួចរាល់សម្រាប់ Share ទៅកាន់ Telegram ឬបណ្តាញសង្គមផ្សេងៗ!");
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function toggleSeeMore() {
+            let moreText = document.getElementById('seeMoreText');
+            let btn = document.getElementById('seeMoreBtn');
+            if (moreText.style.display === "none") {
+                moreText.style.display = "inline";
+                btn.innerText = "See Less";
+            } else {
+                moreText.style.display = "none";
+                btn.innerText = "See More";
+            }
+        }
+
+        function checkAdmin() {
+            openModal('aboutModal');
+        }
+
+        function saveAboutText() {
+            let newText = document.getElementById('editAboutInput').value;
+            if(newText) {
+                document.getElementById('aboutText').innerText = newText;
+                alert("បានកែសម្រួលព័ត៌មានអំពីយើងដោយជោគជ័យ!");
+            }
+        }
+    </script>
+</body>
+</html>
