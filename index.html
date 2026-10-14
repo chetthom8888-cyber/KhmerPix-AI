@@ -6,7 +6,7 @@
     <title>KhmerPix AI Studio</title>
     <!-- Telegram Web App Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Google Fonts for Danh Hong Fonts -->
+    <!-- Google Fonts for Khmer Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Angkor&family=Bayon&family=Bokor&family=Chenla&family=Dangrek&family=Koulen&family=Moul&family=Moulpali&family=Preahvihear&family=Siemreap&family=Suwannaphum&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -84,19 +84,22 @@
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            overflow-y: auto;
+            padding: 10px;
         }
         .modal-content {
             background: var(--card-bg);
             padding: 20px;
             border-radius: 12px;
-            width: 90%;
-            max-width: 400px;
+            width: 100%;
+            max-width: 420px;
             border: 1px solid var(--border-color);
             text-align: center;
+            box-sizing: border-box;
         }
         .spinner {
             border: 4px solid #2a2a2a;
@@ -111,12 +114,13 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .preview-img {
+        .preview-canvas {
             width: 100%;
-            max-height: 250px;
-            object-fit: cover;
+            max-height: 280px;
+            object-fit: contain;
             border-radius: 8px;
             margin-bottom: 10px;
+            background: #000;
         }
     </style>
 </head>
@@ -127,7 +131,7 @@
     <!-- Type 1: ដាក់រូបភាពផលិតផល -->
     <div class="section">
         <label>1. ដាក់រូបភាពផលិតផល (Upload Product):</label>
-        <input type="file" id="productImage" accept="image/*">
+        <input type="file" id="productImage" accept="image/*" onchange="handleImageUpload(event)">
     </div>
 
     <!-- Type 2: Background & Web Search -->
@@ -139,8 +143,8 @@
 
     <!-- Type 3: ឈ្មោះផលិតផល និង Edit ហ្វុន -->
     <div class="section">
-        <label>3. ឈ្មោះផលិតផល ( Editable Text ):</label>
-        <input type="text" id="productTitle" value="ផលិតផលថ្មី គុណភាពខ្ពស់" class="font-moul">
+        <label>3. ឈ្មោះផលិតផល (Editable Text):</label>
+        <input type="text" id="productTitle" value="ផលិតផលថ្មី គុណភាពខ្ពស់" class="font-moul" oninput="syncTitleInput()">
         
         <label style="margin-top: 12px;">ជ្រើសរើសហ្វុន (Fonts):</label>
         <select id="fontSelector" onchange="changeFont()">
@@ -157,7 +161,7 @@
             <option value="font-chenla">Chenla (ចេនឡា)</option>
         </select>
 
-        <label style="margin-top: 12px;">ពណ៌អក្សរ & 3D Effect:</label>
+        <label style="margin-top: 12px;">ពណ៌អក្សរ (Text Color):</label>
         <input type="color" id="textColor" value="#ffffff" style="height:45px; padding: 2px;">
     </div>
 
@@ -187,9 +191,12 @@
     <div id="previewModal" class="modal">
         <div class="modal-content" style="max-width: 450px;">
             <h3 style="color: #10b981;">✨ រូបភាពរួចរាល់សម្រាប់ការកែសម្រួល!</h3>
-            <img id="resultImage" class="preview-img" src="https://via.placeholder.com/400x250/2a2a2a/ffffff?text=KhmerPix+AI+Preview" alt="Generated Image">
-            <label style="text-align: left;">កែសម្រួលអក្សរនៅលើរូបភាពភ្លាមៗ:</label>
-            <input type="text" id="editImageText" value="ផលិតផលថ្មី គុណភាពខ្ពស់" style="margin-bottom: 10px;">
+            <!-- Canvas Preview -->
+            <canvas id="resultCanvas" class="preview-canvas"></canvas>
+            
+            <label style="text-align: left; margin-top: 10px;">កែសម្រួលអក្សរនៅលើរូបភាពភ្លាមៗ:</label>
+            <input type="text" id="editImageText" value="ផលិតផលថ្មី គុណភាពខ្ពស់" style="margin-bottom: 10px;" oninput="updateCanvasText()">
+            
             <button onclick="saveImage()" style="background-color: #10b981;">💾 រក្សាទុក & ចែករំលែក</button>
             <button onclick="closeModal('previewModal')" style="background-color: #4b5563;">បិទ</button>
         </div>
@@ -231,31 +238,111 @@
             document.getElementById('adminEditSection').style.display = "block";
         }
 
+        let uploadedImageObj = null;
+
+        // អានរូបភាពដែល User Upload ចូលមក
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        uploadedImageObj = img;
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
         function changeFont() {
             let selectedFont = document.getElementById('fontSelector').value;
-            let titleInput = document.getElementById('productTitle');
-            titleInput.className = selectedFont;
+            document.getElementById('productTitle').className = selectedFont;
             document.getElementById('editImageText').className = selectedFont;
+            updateCanvasText();
+        }
+
+        function syncTitleInput() {
+            document.getElementById('editImageText').value = document.getElementById('productTitle').value;
+            updateCanvasText();
         }
 
         function startGenerating(type) {
             document.getElementById('loadingModal').style.display = 'flex';
             
-            // จำลองเวลา রង់ចាំ (Loading Time 2 វិនាទី)
+            // កំណត់អត្ថបទ同步គ្នា
+            let mainTitle = document.getElementById('productTitle').value;
+            document.getElementById('editImageText').value = mainTitle;
+
+            // จำลองเวลา 2 វិនាទី ពេល AI កំពុង Generate
             setTimeout(() => {
                 document.getElementById('loadingModal').style.display = 'none';
-                // បង្ហាញ Result Preview Modal សម្រាប់ Edit
-                document.getElementById('editImageText').value = document.getElementById('productTitle').value;
                 document.getElementById('previewModal').style.display = 'flex';
+                drawResultCanvas(); // បង្កើតរូបភាព និងអក្សរចូល Canvas
             }, 2000);
+        }
+
+        // មុខងារគូររូបភាព និងអក្សរដាក់លើ Canvas ស្វ័យប្រវត្តិ
+        function drawResultCanvas() {
+            const canvas = document.getElementById('resultCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // កំណត់ទំហំ Standard របស់ Canvas
+            canvas.width = 800;
+            canvas.height = 600;
+
+            if (uploadedImageObj) {
+                // បើមាន Upload រូប គឺဆွဲរូបនោះដាក់ពីក្រោយ
+                ctx.drawImage(uploadedImageObj, 0, 0, canvas.width, canvas.height);
+            } else {
+                // បើអត់មាន ដាក់ Background ពណ៌ស្អាតជំនួស
+                let gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                gradient.addColorStop(0, "#312e81");
+                gradient.addColorStop(1, "#1e1b4b");
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            // ដាក់ Shadow និងអត្ថបទលើរូបភាព
+            let text = document.getElementById('editImageText').value;
+            let color = document.getElementById('textColor').value;
+            let selectFont = document.getElementById('fontSelector');
+            let fontName = selectFont.options[selectFont.selectedIndex].text.split(' ')[0]; // យកឈ្មោះហ្វុន
+
+            ctx.save();
+            ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 3;
+            ctx.shadowOffsetY = 3;
+
+            ctx.fillStyle = color;
+            ctx.font = `bold 48px '${fontName}', sans-serif, 'Siemreap'`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "bottom";
+
+            // បង្ហាញអក្សរកណ្តាលផ្នែកខាងក្រោមនៃរូបភាព
+            ctx.fillText(text, canvas.width / 2, canvas.height - 40);
+            ctx.restore();
+        }
+
+        function updateCanvasText() {
+            drawResultCanvas();
         }
 
         function generateDescription() {
             document.getElementById('productDesc').value = "✨ ផលិតផលថ្មីគុណភាពខ្ពស់ នាំចូលផ្ទាល់ ធានាទាំងតម្លៃ និងគុណភាព! កម្មង់ទិញថ្ងៃនេះទទួលបានការបញ្ចុះតម្លៃពិសេស។";
         }
 
+        // រក្សាទុក និងទាញយករូបភាពចេញជា File PNG
         function saveImage() {
-            alert("រូបភាពត្រូវបានរក្សាទុក និងរួចរាល់សម្រាប់ Share ទៅកាន់ Telegram ឬបណ្តាញសង្គមផ្សេងៗ!");
+            const canvas = document.getElementById('resultCanvas');
+            const link = document.createElement('a');
+            link.download = 'KhmerPix-Product.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+            alert("រូបភាពត្រូវបានរក្សាទុកជោគជ័យ! អ្នកអាចយកវាទៅ Share ក្នុង Telegram បានភ្លាមៗ។");
             closeModal('previewModal');
         }
 
